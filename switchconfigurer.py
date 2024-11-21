@@ -11,9 +11,19 @@ switch = {
     'session_log': 'session_log.txt',  # Enable session logging to file
 }
 
+# Function to expand VLAN ranges (e.g., "400-600" -> "400,401,402,...,600")
+def expand_vlan_range(vlan_range):
+    expanded_vlans = []
+    for part in vlan_range.split(','):
+        if '-' in part:
+            start_vlan, end_vlan = part.split('-')
+            expanded_vlans.extend(range(int(start_vlan), int(end_vlan) + 1))
+        else:
+            expanded_vlans.append(int(part))
+    return expanded_vlans
+
 # Function to handle port ranges and single ports
 def handle_ports(ports, vlan_id, description, switch, is_management=False):
-    #switch starts at 0 but csv file could start at 1
     switch = switch - 1
     if switch < 0:
         switch = 0
@@ -29,14 +39,14 @@ def handle_ports(ports, vlan_id, description, switch, is_management=False):
             # Handle single port
             config_commands.append(f"interface FastEthernet {switch}/{port}")
         
-        # Handle trunk ports (based on description)
+        # Check if the description indicates trunk or uplink
         if 'trunk' in description.lower() or 'uplink' in description.lower():
             config_commands.append(" switchport mode trunk")
-            if vlan_id:
-                config_commands.append(f" switchport trunk allowed vlan {vlan_id}")  # Apply VLAN filtering for trunk ports
+            if vlan_id:  # If VLAN filtering is specified
+                config_commands.append(f" switchport trunk allowed vlan {','.join(map(str, vlan_id))}")  # Apply VLAN filtering for trunk ports
         else:
             # For non-trunk ports (access ports)
-            config_commands.append(f" switchport access vlan {vlan_id}")
+            config_commands.append(f" switchport access vlan {vlan_id[0]}")  # Assuming first VLAN for access ports
             config_commands.append(f" description {description} port")
             if is_management:
                 config_commands.append(" switchport mode access")
@@ -61,42 +71,47 @@ def generate_config(csv_file):
             subnet_mask = row['Netmask']
             ports = row['Ports']
             switchNr = row['Switch']
+            print(f"Switch: {switchNr} for vlan {vlan_id}")
             
+            # Expand VLAN range if necessary
+            expanded_vlan_ids = expand_vlan_range(vlan_id) if vlan_id else []
+
             # Check if VLAN number goes above the standard VTP range of 1-1005
-            if int(vlan_id) > 1005:
+            if expanded_vlan_ids and min(expanded_vlan_ids) > 1005:
                 config_commands.append("vtp mode transparent")
 
             # Add VLAN creation commands
-            config_commands.append(f"vlan {vlan_id}")
-            config_commands.append(f" name {description}")  # This may be omitted if not supported
-            config_commands.append("exit")  # Exit VLAN configuration mode
+            for vlan in expanded_vlan_ids:
+                config_commands.append(f"vlan {vlan}")
+                config_commands.append(f" name {description}")  # This may be omitted if not supported
+                config_commands.append("exit")  # Exit VLAN configuration mode
 
             # Special case for Management VLAN
             if ip_address and (description.lower().startswith("management") or description.lower().startswith("mgmt")):
                 ip_routing_needed = True
-                config_commands.append(f"interface vlan{vlan_id}")
+                config_commands.append(f"interface vlan{expanded_vlan_ids[0]}")  # Management VLAN typically uses the first VLAN ID
                 config_commands.append(f" description {description} (Management VLAN)")
                 config_commands.append(f" ip address {ip_address} {subnet_mask}")
                 config_commands.append(" no shutdown")
                 config_commands.append("exit")  # Exit interface configuration mode
                 # Mark ports as part of the management VLAN
-                port_commands = handle_ports(ports, vlan_id, description, int(switchNr), is_management=True)
+                port_commands = handle_ports(ports, expanded_vlan_ids, description, int(switchNr), is_management=True)
             else:
                 if ip_address:
                     # Layer 3 VLAN configuration
                     ip_routing_needed = True
-                    config_commands.append(f"interface vlan{vlan_id}")
+                    config_commands.append(f"interface vlan{expanded_vlan_ids[0]}")  # Layer 3 interface uses the first VLAN ID
                     config_commands.append(f" description {description}")
                     config_commands.append(f" ip address {ip_address} {subnet_mask}")
                     config_commands.append(" no shutdown")
                     config_commands.append("exit")  # Exit interface configuration mode
                 else:
                     # Layer 2 VLAN configuration
-                    config_commands.append(f"! Skipping Layer 3 configuration for VLAN {vlan_id} (Layer 2 only)")
+                    config_commands.append(f"! Skipping Layer 3 configuration for VLAN {expanded_vlan_ids[0]} (Layer 2 only)")
                 
                 # Check if ports are defined
                 if ports:
-                    port_commands = handle_ports(ports, vlan_id, description, int(switchNr))
+                    port_commands = handle_ports(ports, expanded_vlan_ids, description, int(switchNr))
 
             # Add port configuration commands
             config_commands.extend(port_commands)

@@ -12,12 +12,13 @@ switch = {
 }
 
 # Function to handle port ranges and single ports
-def handle_ports(ports, vlan_id, description,switch, is_management=False):
+def handle_ports(ports, vlan_id, description, switch, is_management=False):
     #switch starts at 0 but csv file could start at 1
-    switch = switch -1
+    switch = switch - 1
     if switch < 0:
         switch = 0
     config_commands = []
+    
     # Split ports by commas
     for port in ports.split(','):
         if '-' in port:
@@ -27,12 +28,19 @@ def handle_ports(ports, vlan_id, description,switch, is_management=False):
         else:
             # Handle single port
             config_commands.append(f"interface FastEthernet {switch}/{port}")
-
-        # Common commands for both ranges and single ports
-        config_commands.append(f" switchport access vlan {vlan_id}")
-        config_commands.append(f" description {description} port")
-        if is_management:
-            config_commands.append(" switchport mode access")
+        
+        # Handle trunk ports (based on description)
+        if 'trunk' in description.lower() or 'uplink' in description.lower():
+            config_commands.append(" switchport mode trunk")
+            if vlan_id:
+                config_commands.append(f" switchport trunk allowed vlan {vlan_id}")  # Apply VLAN filtering for trunk ports
+        else:
+            # For non-trunk ports (access ports)
+            config_commands.append(f" switchport access vlan {vlan_id}")
+            config_commands.append(f" description {description} port")
+            if is_management:
+                config_commands.append(" switchport mode access")
+        
         config_commands.append(" no shutdown")
         config_commands.append("exit")  # Ensure clean exit
     return config_commands
@@ -53,8 +61,8 @@ def generate_config(csv_file):
             subnet_mask = row['Netmask']
             ports = row['Ports']
             switchNr = row['Switch']
-            print(f"Switch: {switchNr} for vlan {vlan_id}")
-            # check of vlan number goes above standard vtp range of 1-1005
+            
+            # Check if VLAN number goes above the standard VTP range of 1-1005
             if int(vlan_id) > 1005:
                 config_commands.append("vtp mode transparent")
 
@@ -64,7 +72,7 @@ def generate_config(csv_file):
             config_commands.append("exit")  # Exit VLAN configuration mode
 
             # Special case for Management VLAN
-            if ip_address and description.lower().startswith("management") or ip_address and description.lower().startswith("mgmt"):
+            if ip_address and (description.lower().startswith("management") or description.lower().startswith("mgmt")):
                 ip_routing_needed = True
                 config_commands.append(f"interface vlan{vlan_id}")
                 config_commands.append(f" description {description} (Management VLAN)")
@@ -85,7 +93,8 @@ def generate_config(csv_file):
                 else:
                     # Layer 2 VLAN configuration
                     config_commands.append(f"! Skipping Layer 3 configuration for VLAN {vlan_id} (Layer 2 only)")
-                #check if ports are defined
+                
+                # Check if ports are defined
                 if ports:
                     port_commands = handle_ports(ports, vlan_id, description, int(switchNr))
 
@@ -116,7 +125,6 @@ def save_config_to_file(config_commands, output_file):
 # Main function to run the script
 def main():
     # File paths
-    #csv_file = 'BST-D-1-242.csv'  # Path to your CSV file
     csv_file = 'BST-C-Core-2.csv'  # Path to your CSV file
     output_file = 'switch_config.txt'  # Path to save the generated config file
 

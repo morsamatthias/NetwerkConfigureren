@@ -1,0 +1,63 @@
+Unauthorized access strictly prohibited and prosecuted to the full extent of the law
+matthiasSwitch#
+matthiasSwitch#terminal width 511
+matthiasSwitch#terminal length 0
+matthiasSwitch#
+matthiasSwitch#
+matthiasSwitch#
+matthiasSwitch#configure terminal
+Enter configuration commands, one per line.  End with CNTL/Z.
+matthiasSwitch(config)#
+matthiasSwitch(config)#ip routing
+matthiasSwitch(config)#vtp mode transparent
+Device mode already VTP TRANSPARENT.
+matthiasSwitch(config)#vlan 1982
+matthiasSwitch(config-vlan)# name CD-WIFI
+matthiasSwitch(config-vlan)#exit
+matthiasSwitch(config)#interface vlan1982
+matthiasSwitch(config-if)# description CD-WIFI
+matthiasSwitch(config-if)# ip address 172.19.82.1 255.255.255.0
+matthiasSwitch(config-if)# no shutdown
+matthiasSwitch(config-if)#exit
+matthiasSwitch(config)#interface range FastEthernet 0/1 - 5
+matthiasSwitch(config-if-range)# switchport access vlan 1982
+matthiasSwitch(config-if-range)# description CD-WIFI port
+matthiasSwitch(config-if-range)# no shutdown
+matthiasSwitch(config-if-range)#exit
+matthiasSwitch(config)#
+matthiasSwitch(config)#vtp mode transparent
+Device mode already VTP TRANSPARENT.
+matthiasSwitch(config)#vlan 1982
+matthiasSwitch(config-vlan)# name CD-WIFI
+matthiasSwitch(config-vlan)#exit
+matthiasSwitch(config)#! Skipping Layer 3 configuration for VLAN 1982 (Layer 2 only)
+matthiasSwitch(config)#interface FastEthernet 1/7
+                                              ^
+% Invalid input detected at '^' marker.
+
+matthiasSwitch(config)# switchport access vlan 1982
+                         ^
+% Invalid input detected at '^' marker.
+
+matthiasSwitch(config)# description CD-WIFI port
+                          ^
+% Invalid input detected at '^' marker.
+
+matthiasSwitch(config)# no shutdown
+% Incomplete command.
+
+matthiasSwitch(config)#exit
+matthiasSwitch#
+matthiasSwitch#vtp mode transparent
+                   ^
+% Invalid input detected at '^' marker.
+
+matthiasSwitch#vlan 1969
+                    ^
+% Invalid input detected at '^' marker.
+
+matthiasSwitch# name CD-IP-Cam
+                     ^
+% Invalid input detected at '^' marker.
+
+matthiasSwitch#exit

@@ -1,0 +1,60 @@
+
+# Switch Configuration Commands:
+
+# Enable SSH and configure SSH parameters
+service password-encryption
+security passwords min-length 10
+enable secret cisco
+
+# Creating users in the local user database
+username cisco privilege 15 secret 123
+
+# Configure the management interface (VLAN 100)
+vlan 100
+name management
+interface vlan100
+description management
+ip address 192.168.100.100 255.255.255.0
+no shutdown
+
+# Configure the physical port for management VLAN access
+interface fastEthernet 0/23
+switchport mode access
+switchport access vlan 100
+description mgt-interface
+
+# Configure IP domain and SSH settings
+ip domain-name company.com
+ip ssh version 2
+ip ssh time-out 90
+ip ssh authentication-retries 2
+
+# Create RSA encryption key pair for SSH
+crypto key generate rsa general-keys modulus 2048
+
+# Configure VTY lines for SSH access
+line vty 0 4
+login local
+transport input ssh
+line vty 5 15
+login local
+transport input ssh
+
+# Configure login banner
+banner motd $Unauthorized access strictly prohibited and prosecuted to the full extent of the law$
+
+# Save configuration to startup-config
+write memory
+
+# Windows SSH Client Command:
+
+# To connect to the switch, use the following SSH command with necessary options
+ssh -oHostKeyAlgorithms=+ssh-rsa -oKexAlgorithms=+diffie-hellman-group1-sha1 -oCiphers=+aes128-cbc,3des-cbc,aes192-cbc,aes256-cbc -oMACs=+hmac-sha1,hmac-sha1-96,hmac-md5,hmac-md5-96 cisco@192.168.100.100
+
+# If you encounter the "remote host identification has changed" error, remove the old host key from your known_hosts file:
+ssh-keygen -R 192.168.100.100
+
+# After clearing the old key, reconnect and accept the new host key by typing "yes":
+# The authenticity of host '192.168.100.100' can't be established.
+# RSA key fingerprint is SHA256:Jg18tG4424FdWE3qTNqSGzxe9suMFA6LX3Fi3e5beo8.
+# Are you sure you want to continue connecting (yes/no)?

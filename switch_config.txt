@@ -1,0 +1,166 @@
+ip routing
+vtp mode transparent
+vlan 1982
+ name CD-WIFI
+exit
+interface vlan1982
+ description CD-WIFI
+ ip address 172.19.82.1 255.255.255.0
+ no shutdown
+exit
+interface range FastEthernet 0/1 - 5
+ switchport access vlan 1982
+ description CD-WIFI port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1982
+ name CD-WIFI
+exit
+! Skipping Layer 3 configuration for VLAN 1982 (Layer 2 only)
+interface FastEthernet 1/7
+ switchport access vlan 1982
+ description CD-WIFI port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1969
+ name CD-IP-Cam
+exit
+interface vlan1969
+ description CD-IP-Cam
+ ip address 172.19.69.1 255.255.255.0
+ no shutdown
+exit
+interface range FastEthernet 0/9 - 12
+ switchport access vlan 1969
+ description CD-IP-Cam port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1969
+ name CD-IP-Cam
+exit
+! Skipping Layer 3 configuration for VLAN 1969 (Layer 2 only)
+interface FastEthernet 1/8
+ switchport access vlan 1969
+ description CD-IP-Cam port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1978
+ name CD-Lockers
+exit
+interface vlan1978
+ description CD-Lockers
+ ip address 172.19.78.1 255.255.255.0
+ no shutdown
+exit
+interface FastEthernet 0/13
+ switchport access vlan 1978
+ description CD-Lockers port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1978
+ name CD-Lockers
+exit
+! Skipping Layer 3 configuration for VLAN 1978 (Layer 2 only)
+interface FastEthernet 1/14
+ switchport access vlan 1978
+ description CD-Lockers port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1966
+ name CD-HVAC
+exit
+interface vlan1966
+ description CD-HVAC
+ ip address 172.19.66.1 255.255.255.0
+ no shutdown
+exit
+interface range FastEthernet 0/15 - 16
+ switchport access vlan 1966
+ description CD-HVAC port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1966
+ name CD-HVAC
+exit
+! Skipping Layer 3 configuration for VLAN 1966 (Layer 2 only)
+interface FastEthernet 1/17
+ switchport access vlan 1966
+ description CD-HVAC port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1968
+ name CD-Printers
+exit
+interface vlan1968
+ description CD-Printers
+ ip address 172.19.68.1 255.255.255.0
+ no shutdown
+exit
+interface range FastEthernet 0/19 - 20
+ switchport access vlan 1968
+ description CD-Printers port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1968
+ name CD-Printers
+exit
+! Skipping Layer 3 configuration for VLAN 1968 (Layer 2 only)
+interface FastEthernet 1/18
+ switchport access vlan 1968
+ description CD-Printers port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1971
+ name CD-Clients-C0-1
+exit
+interface vlan1971
+ description CD-Clients-C0-1
+ ip address 172.19.71.1 255.255.255.0
+ no shutdown
+exit
+interface FastEthernet 0/22
+ switchport access vlan 1971
+ description CD-Clients-C0-1 port
+ no shutdown
+exit
+
+vtp mode transparent
+vlan 1972
+ name CD-Clients-C2-3
+exit
+interface vlan1972
+ description CD-Clients-C2-3
+ ip address 172.19.72.1 255.255.255.0
+ no shutdown
+exit
+interface FastEthernet 1/6
+ switchport access vlan 1972
+ description CD-Clients-C2-3 port
+ no shutdown
+exit
+
+! IP routing was enabled because Layer 3 VLANs are configured.
+interface vlan1
+ shutdown
+exit
+! VLAN 1 has been disabled

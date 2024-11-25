@@ -1,26 +1,17 @@
 ip routing
 interface gi0/0
- ip address 172.23.80.200 255.255.254.0
- ip default-gateway 172.23.80.1
- description WAN
- no shutdown
+ip address 172.23.80.200 255.255.254.0
+ip default-gateway 172.23.80.1
+description WAN
+no shutdown
 exit
+ip route 172.23.80.200 255.255.254.0 172.23.80.1
 interface gi0/1
- ip address 192.168.0.254 255.255.255.0
- description Servers
- no shutdown
+ip address 192.168.0.254 255.255.255.0
+description Servers
+no shutdown
 exit
-interface 
- ip address 192.168.2.0 255.255.255.0
- ip default-gateway 192.168.0.1
- description Accounting
- no shutdown
-exit
-interface 
- ip address 192.168.3.0 255.255.255.0
- ip default-gateway 192.168.0.1
- description HR
- no shutdown
-exit
+ip route 192.168.2.0 255.255.255.0 192.168.0.1
+ip route 192.168.3.0 255.255.255.0 192.168.0.1
 ip route 0.0.0.0 0.0.0.0 172.23.80.1
 ! IP routing was enabled to allow internet access.

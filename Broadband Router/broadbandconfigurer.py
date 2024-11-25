@@ -19,11 +19,11 @@ def handle_interface(interface, vlan, description, ip_address, subnet_mask, defa
     # Configure the interface
     config_commands.append(f"interface {interface}")
     if ip_address:
-        config_commands.append(f" ip address {ip_address} {subnet_mask}")
+        config_commands.append(f"ip address {ip_address} {subnet_mask}")
     if default_gateway:
-        config_commands.append(f" ip default-gateway {default_gateway}")
-    config_commands.append(f" description {description}")
-    config_commands.append(" no shutdown")
+        config_commands.append(f"ip default-gateway {default_gateway}")
+    config_commands.append(f"description {description}")
+    config_commands.append("no shutdown")
     config_commands.append("exit")  # Exit interface configuration mode
     
     # For VLANs, configure them
@@ -34,11 +34,21 @@ def handle_interface(interface, vlan, description, ip_address, subnet_mask, defa
     
     return config_commands
 
-# Function to handle routing (static route to enable internet access)
+# Function to handle static routes for specific subnets
+def handle_static_routes(network, subnet_mask, default_gateway):
+    config_commands = []
+    # Add a static route for the specified network via its gateway
+    if network and subnet_mask and default_gateway:
+        route_command = f"ip route {network} {subnet_mask} {default_gateway}"
+        if route_command not in config_commands:  # Prevent duplicates
+            config_commands.append(route_command)
+    return config_commands
+
 def handle_routing(wan_gateway):
     config_commands = []
-    # Static route to the ISP gateway for internet access (replace the IP with your gateway's IP)
-    config_commands.append(f"ip route 0.0.0.0 0.0.0.0 {wan_gateway}")  # Default route to ISP gateway
+    # Static route to the ISP gateway for internet access
+    if wan_gateway:
+        config_commands.append(f"ip route 0.0.0.0 0.0.0.0 {wan_gateway}")  # Default route to ISP gateway
     return config_commands
 
 # Define a function to process the CSV data and generate configuration commands
@@ -59,11 +69,17 @@ def generate_config(csv_file):
             subnet_mask = row['subnetmask']
             default_gateway = row['defaultgateway']
             
-            print(f"Configuring {interface} for {description} with IP {ip_address}")
-            
             # Add interface and VLAN configuration commands
-            interface_commands = handle_interface(interface, vlan, description, ip_address, subnet_mask, default_gateway)
-            config_commands.extend(interface_commands)
+            if interface:
+                print(f"Configuring {interface} for {description} with IP {ip_address}")
+                interface_commands = handle_interface(interface, vlan, description, ip_address, subnet_mask, default_gateway)
+                config_commands.extend(interface_commands)
+            
+            # Handle static routes for specific networks with gateways
+            if network and default_gateway:
+                print(f"Adding static route for {ip_address}/{subnet_mask} via {default_gateway}")
+                static_routes = handle_static_routes(ip_address, subnet_mask, default_gateway)
+                config_commands.extend(static_routes)
             
             # If this is the WAN interface, store its gateway for the default route
             if interface == 'gi0/0' and default_gateway:

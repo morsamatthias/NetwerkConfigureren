@@ -120,7 +120,7 @@ def generate_config(csv_file):
     # Enable IP routing if needed
     if ip_routing_needed:
         config_commands.insert(0, "ip routing")  # Add at the top of the configuration
-        config_commands.append("! IP routing was enabled because Layer 3 VLANs are configured.")
+        config_commands.append("! IP routing was enabled because Layer 3 VLANs are configured. (first line of the config)")
 
     # Add commands to disable VLAN 1
     config_commands.append("interface vlan1")

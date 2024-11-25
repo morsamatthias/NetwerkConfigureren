@@ -12,7 +12,7 @@ router = {
 }
 remote_execution = False  # Set to True to enable remote execution on the router
 
-# Function to handle the configuration of interfaces and VLANs
+# Function to handle the configuration of interfaces, VLANs, and routing
 def handle_interface(interface, vlan, description, ip_address, subnet_mask, default_gateway):
     config_commands = []
     
@@ -27,17 +27,25 @@ def handle_interface(interface, vlan, description, ip_address, subnet_mask, defa
     config_commands.append("exit")  # Exit interface configuration mode
     
     # For VLANs, configure them
-    config_commands.append(f"vlan {vlan}")
-    config_commands.append(f" name {description}")
-    config_commands.append("exit")  # Exit VLAN configuration mode
+    if vlan != '0':  # Skip if vlan is 0
+        config_commands.append(f"vlan {vlan}")
+        config_commands.append(f" name {description}")
+        config_commands.append("exit")  # Exit VLAN configuration mode
     
+    return config_commands
+
+# Function to handle routing (static route to enable internet access)
+def handle_routing(wan_gateway):
+    config_commands = []
+    # Static route to the ISP gateway for internet access (replace the IP with your gateway's IP)
+    config_commands.append(f"ip route 0.0.0.0 0.0.0.0 {wan_gateway}")  # Default route to ISP gateway
     return config_commands
 
 # Define a function to process the CSV data and generate configuration commands
 def generate_config(csv_file):
     config_commands = []
-    ip_routing_needed = False  # Flag to track if IP routing is needed
-
+    wan_gateway = None  # Store WAN gateway IP to configure the default route
+    
     # Open the CSV file and read it
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file, delimiter=';')
@@ -51,16 +59,23 @@ def generate_config(csv_file):
             subnet_mask = row['subnetmask']
             default_gateway = row['defaultgateway']
             
-            print(f"Configuring {interface} for VLAN {vlan} with IP {ip_address}")
+            print(f"Configuring {interface} for {description} with IP {ip_address}")
             
             # Add interface and VLAN configuration commands
             interface_commands = handle_interface(interface, vlan, description, ip_address, subnet_mask, default_gateway)
             config_commands.extend(interface_commands)
+            
+            # If this is the WAN interface, store its gateway for the default route
+            if interface == 'gi0/0' and default_gateway:
+                wan_gateway = default_gateway
 
+    # Add static routing to provide internet access (default route) if WAN gateway is defined
+    if wan_gateway:
+        config_commands.extend(handle_routing(wan_gateway))
+    
     # Enable IP routing if Layer 3 configuration (IP addressing) is used
-    if ip_routing_needed:
-        config_commands.insert(0, "ip routing")  # Add at the top of the configuration
-        config_commands.append("! IP routing was enabled because Layer 3 VLANs are configured. (first line of the config)")
+    config_commands.insert(0, "ip routing")  # Add at the top of the configuration
+    config_commands.append("! IP routing was enabled to allow internet access.")
 
     return config_commands
 
@@ -74,7 +89,7 @@ def save_config_to_file(config_commands, output_file):
 # Main function to run the script
 def main():
     # File paths
-    csv_file = 'config4.csv'  # Path to your CSV file
+    csv_file = 'config3.csv'  # Path to your CSV file
     output_file = 'router_config.txt'  # Path to save the generated config file
 
     # Generate the configuration commands from CSV data

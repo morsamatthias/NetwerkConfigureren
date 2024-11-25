@@ -1,0 +1,8 @@
+shelly_ip_address = "192.168.33.1"
+network_wifi_ssid = ""
+network_wifi_password = ""
+network_gateway = ""
+network_netmask = ""
+network_dns = ""
+shelly_password = ""
+shelly_username = ""

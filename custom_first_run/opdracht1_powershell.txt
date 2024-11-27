@@ -1,0 +1,24 @@
+bash
+cat > ./txt <<'<name>'
+txt
+txt
+txt
+
+<name>
+
+powershell
+Set-Content -Path .\txt -Value @"
+txt
+txt
+txt
+"@ -Encoding utf8
+
+
+een powershell script om je pi netwerk al intestellen et bvb static ip
+zoek naar bootfs
+zoek naar firstrun.sh
+pas firstrun.sh aan
+dos2unix
+
+
+

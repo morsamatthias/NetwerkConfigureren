@@ -3,12 +3,12 @@ import json
 import time
 from requests.auth import HTTPBasicAuth
 from pywifi import PyWiFi, const
-
+from ShellySettings import *
 
 # Shelly device configuration
-SHELLY_IP = 'http://192.168.33.1'  # Shelly device's IP address
-SSID = 'MorsaWifi'  # Target Wi-Fi network SSID
-PASSWORD = 'Matthias'  # Wi-Fi network password
+SHELLY_IP = f'http://{shelly_ip_address}'  # Shelly device's IP address
+SSID = network_wifi_ssid  # Target Wi-Fi network SSID
+PASSWORD = network_wifi_password
 
 # Shelly enable/disable led status for either status or power
 def update_led_status(ip_address, led_status_disable=None, led_power_disable=None):
@@ -242,14 +242,14 @@ if __name__ == "__main__":
         if connect_to_wifi(shelly_ap_ssid):
             shelly_ip = SHELLY_IP
             # Send the device name configuration
-            #update_wifi_config(SHELLY_IP, SSID, PASSWORD)
-            #update_led_status(shelly_ip, led_status_disable=True, led_power_disable=True)
-            #update_device_name(SHELLY_IP, "MorsaPlug")
-            #set_max_power(SHELLY_IP, 2200)
-            #set_relay_default_state(SHELLY_IP, 0, "off") # shelly plug s has only one relay
+            update_led_status(shelly_ip, led_status_disable=True, led_power_disable=True)
+            update_device_name(SHELLY_IP, "MorsaPlug")
+            set_max_power(SHELLY_IP, 2200)
+            set_relay_default_state(SHELLY_IP, 0, "off") # shelly plug s has only one relay
             configure_mqtt(SHELLY_IP, "172.23.83.254", "Morsa-Matthias-Outlet1")
-            reboot_device(SHELLY_IP)
-
+            update_wifi_config(SHELLY_IP, SSID, PASSWORD)
+            reboot_device(SHELLY_IP)# api1 doesn let reboot work after wifi config so we need to reboot manually
+            print("Configuration completed. Take device out of the socket and plug it back in.")
         else:
             print(f"Failed to connect to {shelly_ap_ssid}. Please try again.")
     except Exception as e:
